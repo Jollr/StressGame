@@ -1,45 +1,51 @@
+const int contactInputPin = 2;
 const int speakerPin = 8;
 
 void setup() {
   Serial.begin(9600);
   log("start");
+  pinMode(contactInputPin, INPUT);
   pinMode(speakerPin, OUTPUT);
-  playSound();
 }
 
 void loop() {
-  log("loop");
-  controlSound();
+  checkContactInputs();
+  gameLogic();  
+  controlSoundOutputs();
 }
 
-bool playingSound = false;
+bool isCircuit1Closed = false;
+void checkContactInputs() {
+  isCircuit1Closed = digitalRead(contactInputPin) == HIGH;
+}
+
+bool wasCircuit1Closed = false;
+void gameLogic() {
+  if (isCircuit1Closed && !wasCircuit1Closed) {
+    wasCircuit1Closed = true;
+    startSound();
+  }
+}
+
 unsigned long soundStartTime = 0;
 int soundPeriod = 0;
-void playSound() {
-  if (playingSound) return;
-
-  playingSound = true;
+void startSound() {
   soundStartTime = micros();
-  soundPeriod = 1000000 / 196; // microseconds
+  soundPeriod = 1000000 / 1000; // microseconds
 }
 
 void stopSound() {
-  playingSound = false;
   soundPeriod = 0;
   digitalWrite(speakerPin, LOW);
 }
 
-void controlSound() {
-  log("1");
+void controlSoundOutputs() {
   if (soundPeriod == 0) return;
-log("2");
   unsigned long now = micros();
   if ( ((now - soundStartTime) / soundPeriod) % 2 == 0) {
     digitalWrite(speakerPin, HIGH);
-    log("high");
   } else {
     digitalWrite(speakerPin, LOW);
-    log("low");
   }
 }
 
